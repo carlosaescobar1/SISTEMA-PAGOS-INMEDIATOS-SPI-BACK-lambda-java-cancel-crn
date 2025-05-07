@@ -2,13 +2,15 @@ plugins {
     id("io.micronaut.application") version "4.5.3"
     id("com.gradleup.shadow") version "8.3.6"
     id("io.micronaut.aot") version "4.5.3"
+    id 'jacoco'
 }
 
-version = "0.1"
+version = "2.0"
 group = "co.com.ath"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -18,15 +20,66 @@ dependencies {
     implementation("io.micronaut.aws:micronaut-aws-lambda-events-serde")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
     runtimeOnly("ch.qos.logback:logback-classic")
+
+    implementation('io.jsonwebtoken:jjwt:0.2')
+    implementation("io.micronaut.aws:micronaut-function-aws")
+    implementation("io.micronaut.aws:micronaut-aws-sdk-v2")
+    implementation("io.micronaut.aws:micronaut-function-aws-custom-runtime")
+    implementation(platform("io.micronaut:micronaut-bom:3.7.1"))
+
+    //Dependencias aws
+    implementation group: 'software.amazon.awssdk', name: 'dynamodb-enhanced', version: '2.29.26'
+    implementation group: 'software.amazon.awssdk', name: 'ssm', version: '2.12.0'
+    implementation group: 'software.amazon.awssdk', name: 'secretsmanager', version: '2.23.2'
+    implementation group: 'software.amazon.awssdk', name: 'sns', version: '2.28.28'
+    implementation 'org.opensearch.client:opensearch-rest-client:2.4.0'
+    implementation("org.json:json:20220924")
+    implementation 'org.opensearch.client:opensearch-java:2.1.0'
+    implementation 'com.amazonaws:aws-lambda-java-core:1.2.1'
+    implementation 'com.amazonaws:aws-lambda-java-events:3.11.0'
+    implementation("com.amazonaws:aws-java-sdk-dynamodb:1.12.389")
+
+    //MAP
+    implementation 'org.mapstruct:mapstruct:1.6.0'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.0'
+
+    // Use JUnit Jupiter for testing.
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '5.12.0'
+    testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '5.12.0'
+    testImplementation group: 'org.powermock', name: 'powermock-core', version: '2.0.9'
+
+    // lombok
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Librerías internas
+    implementation group: 'co.com.ath', name: 'spbvi-commons-lib', version: '2.0-SNAPSHOT'
+    implementation group: 'co.com.ath', name: 'spbvi-conn-redeban', version: '2.0-SNAPSHOT'
+    implementation group: 'co.com.ath', name: 'spbvi-opensearch-logs-lib', version: '2.0-SNAPSHOT'
+    implementation group: 'co.com.ath', name: 'spbvi-opensearch-sync-lib', version: '2.0-SNAPSHOT'
+
+    implementation 'io.micronaut.validation:micronaut-validation'
+    annotationProcessor 'io.micronaut.validation:micronaut-validation-processor'
+
+    implementation 'com.google.guava:guava:32.1.1-jre'
 }
 
 
 application {
-    mainClass = "co.com.ath.Application"
+    mainClass = "co.com.avc.LambdaHandlerRuntime"
 }
 java {
-    sourceCompatibility = JavaVersion.toVersion("21")
-    targetCompatibility = JavaVersion.toVersion("21")
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    compileJava.options.encoding = 'UTF-8'
+    compileTestJava.options.encoding = 'UTF-8'
 }
 
 
@@ -53,14 +106,17 @@ micronaut {
     }
 }
 
-
-tasks.named("dockerfileNative") {
-    jdkVersion = "21"
-    args(
-        "-XX:MaximumHeapSizePercent=80",
-        "-Dio.netty.allocator.numDirectArenas=0",
-        "-Dio.netty.noPreferDirect=true"
-    )
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
 }
 
+tasks.named("dockerfileNative") {
+    jdkVersion = "17"
+    args(
+            "-XX:MaximumHeapSizePercent=80",
+            "-Dio.netty.allocator.numDirectArenas=0",
+            "-Dio.netty.noPreferDirect=true"
+    )
+}
 
