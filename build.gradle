@@ -6,7 +6,7 @@ plugins {
 }
 
 version = "2.0"
-group = "co.com.ath"
+group = "co.com.avc"
 
 repositories {
     mavenCentral()
@@ -55,7 +55,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
     testCompileOnly 'org.projectlombok:lombok:1.18.24'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
-
+    //MAP
+    implementation 'org.mapstruct:mapstruct:1.6.0'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.0'
     implementation("com.google.code.gson:gson:2.10.1")
 
     // Librerías internas
@@ -63,6 +65,7 @@ dependencies {
     implementation group: 'co.com.ath', name: 'spbvi-conn-redeban', version: '2.0-SNAPSHOT'
     implementation group: 'co.com.ath', name: 'spbvi-opensearch-logs-lib', version: '2.0-SNAPSHOT'
     implementation group: 'co.com.ath', name: 'spbvi-opensearch-sync-lib', version: '2.0-SNAPSHOT'
+    implementation group: 'co.com.ath', name: 'spbvi-conn-corner', version: '2.0-SNAPSHOT'
 
     implementation 'io.micronaut.validation:micronaut-validation'
     annotationProcessor 'io.micronaut.validation:micronaut-validation-processor'
