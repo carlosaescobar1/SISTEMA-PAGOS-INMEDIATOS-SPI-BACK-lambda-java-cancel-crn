@@ -37,12 +37,12 @@ import lombok.Setter;
 public class PaymentMethodDto {
 
     /**
-     * Tipo de medio de pago.
+     * Tipo de medio de pago Ahorros, corriente
      */
     private String type_payment_acc;
 
     /**
-     * Identificación del medio de pago.
+     * Numero de la cuenta
      */
     private String account_number;
 }
