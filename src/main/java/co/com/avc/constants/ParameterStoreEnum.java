@@ -3,7 +3,29 @@ package co.com.avc.constants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
+/**
+ * ParameterStoreEnum
+ * <p>
+ * Enum que contiene los endpoints correspondientes
+ * a los parameterStore
+ * tomar el campo Severity en las respuestas de la lambda.
+ * <p>
+ * Desarrollo ATH - SPBVI
+ * <p>
+ * Creado él: 09 de septiembre de 2024
+ *
+ * @author Luis F. Herreño Mateus
+ * @version 1.0
+ * @since 1.0
+ * <p>
+ * Requerimiento: SPBVI - Sistema de pagos de bajo valor inmediatos
+ * <p>
+ * Copyright © A Toda Hora S.A. Todos los derechos reservados
+ * <p>
+ * Este software es confidencial y es propiedad de ATH, queda prohibido
+ * su uso, reproducción y copia de manera parcial o permanente salvo autorización
+ * expresa de A Toda Hora S.A o de quién represente sus derechos.
+ */
 @AllArgsConstructor
 @Getter
 public enum ParameterStoreEnum {
@@ -16,7 +38,7 @@ public enum ParameterStoreEnum {
     /**
      * Ruta del parámetro que almacena la url del json de las cámaras disponibles
      */
-    PARAM_JSON_VAULT("/SPI/AWUE1ATHSPI-LAMBDA-TRANSV/jsonActiveVault"),
+    PARAM_JSON_VAULT("/SPI/AWUE1ATHSPI-LAMBDA-TRANSV/jsonActiveVaultCor"),
 
     /**
      * Ruta del parámetro que almacena la url del SNS que activara la sonda.

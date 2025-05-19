@@ -41,7 +41,7 @@ public enum ConstantsEnum {
     /**
      * Comentario mostrado al nombre del Vault
      */
-    VAULT_NAME("REDEBAN"),
+    VAULT_NAME("CORNER"),
 
     CEL("2"),
 

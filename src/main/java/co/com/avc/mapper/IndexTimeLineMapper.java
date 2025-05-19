@@ -9,7 +9,28 @@ import co.com.ath.redebanconn.model.Customer;
 import co.com.ath.redebanconn.model.HeadersRq;
 import co.com.ath.redebanconn.model.enrollment.EnrollmentRq;
 import co.com.avc.util.IpSelectorUtil;
-
+/**
+ * IndexTimeLineMapper
+ * <p>
+ * Esta clase mapea un objeto DynamoSpiDto a un objeto OSIndexTimeline
+ * para registrar información en el índice index_timeline
+ * <p>
+ * Desarrollo ATH - SPBVI
+ * <p>
+ * Creado él: 09 de septiembre de 2024
+ *
+ * @author Luis F. Herreño Mateus
+ * @version 1.0
+ * @since 1.0
+ * <p>
+ * Requerimiento: SPBVI - Sistema de pagos de bajo valor inmediatos
+ * <p>
+ * Copyright © A Toda Hora S.A. Todos los derechos reservados
+ * <p>
+ * Este software es confidencial y es propiedad de ATH, queda prohibido
+ * su uso, reproducción y copia de manera parcial o permanente salvo autorización
+ * expresa de A Toda Hora S.A o de quién represente sus derechos.
+ */
 public class IndexTimeLineMapper {
 
     /**
@@ -28,9 +49,9 @@ public class IndexTimeLineMapper {
      * Método que mapea el objeto de entrada de la solicitud de registro (Enrollment)
      * al objeto que representa el índice de time_line en Open search.
      *
-     * @param  modelo que representa el request de la
+     *  que representa el request de la
      *                     petición de creación en línea.
-     * @param   Variable que representa el tipo de log que se quiere guardar
+     * que representa el tipo de log que se quiere guardar
      *                     Request (Rq) o Response (Rs) usado para asignar la fecha
      *                     de la operación.
      * @return Objeto OSIndexTimeline con la información mapeada.

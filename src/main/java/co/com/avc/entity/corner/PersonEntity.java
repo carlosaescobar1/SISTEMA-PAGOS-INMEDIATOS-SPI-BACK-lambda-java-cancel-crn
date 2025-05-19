@@ -11,7 +11,7 @@ import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
 /**
- * AcctInfoEntity
+ * PersonEntity
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>

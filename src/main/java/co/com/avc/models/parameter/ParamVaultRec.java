@@ -31,5 +31,5 @@ import lombok.Setter;
 public class ParamVaultRec {
 
     private String vaultNameRec;
-    private String vaultUploadMas;
+
 }

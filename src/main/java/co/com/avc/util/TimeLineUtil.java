@@ -66,7 +66,7 @@ public class    TimeLineUtil {
      * Obtiene los parámetros en la clase Handler
      * método redirect.
      *
-     * @param enrollmentRq modelo que representa el request de la
+     * @param dynamoSpiDto modelo que representa el request de la
      *                     petición de creación en línea.
      */
     public void sendLogRs(DynamoSpiDto dynamoSpiDto, HeadersRq headersRq) {

@@ -4,10 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * SeverityEnum
+ * BatchEnum
  * <p>
  * Enum que contiene los posibles valores que podrá
- * tomar el campo Severity en las respuestas de la lambda.
+ * tomar el campo Batch en las respuestas de la lambda.
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>

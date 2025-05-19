@@ -13,7 +13,7 @@ import software.amazon.awssdk.enhanced.dynamodb.EnhancedType;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
 /**
- * AcctInfoEntity
+ * DynamoSpiEntity
  *
  * Desarrollo AVC - Sistema de pagos de Bajo Valor Inmediatos (SPBVI)
  *

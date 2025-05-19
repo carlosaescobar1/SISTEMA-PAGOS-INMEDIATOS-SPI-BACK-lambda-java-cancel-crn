@@ -35,6 +35,6 @@ public class ParamActiveVault {
 
     private ParamVaultRec vaultRec;
     private List<ParamVaultUpload> vaultsUpload = new ArrayList<>();
-    private String vaultUploadMas;
+
 
 }

@@ -87,6 +87,7 @@ public class ParameterStoreRepository {
 
             parameterStoreDto.setRegion(generalParameter.get(ParameterStoreEnum.PARAM_REGION.getValue()));
 
+            //Este mapea el Json de la configuracion de los vaults de Corner
             parameterStoreDto.setParamActiveVault((ParamActiveVault)
                     Util.string2object(generalParameter.get(ParameterStoreEnum.PARAM_JSON_VAULT.getValue()),
                             ParamActiveVault.class));

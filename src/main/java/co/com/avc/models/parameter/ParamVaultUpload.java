@@ -31,9 +31,5 @@ import lombok.Setter;
 public class ParamVaultUpload {
 
     private String vaultName;
-    private String arnSnsVaultDelete;
-    private String arnUrlUpdateVault;
-    private String consentMigrate;
-    private String urlCancelVault;
-    private String urlUpdateVault;
+   private String urlDeleteAcctVault;
 }

@@ -1,5 +1,6 @@
 package co.com.avc.util;
 
+import co.com.avc.constants.BankIdEnum;
 import co.com.avc.models.parameter.ParamIp;
 import lombok.extern.slf4j.Slf4j;
 

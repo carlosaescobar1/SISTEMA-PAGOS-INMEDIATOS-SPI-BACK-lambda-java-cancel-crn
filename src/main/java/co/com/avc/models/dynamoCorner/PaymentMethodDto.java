@@ -10,7 +10,7 @@ import lombok.Setter;
 /**
  * PaymentMethodDto
  * <p>
- * Objeto que guarda la información de la llave.
+ * Objeto que guarda la información del metodo de pago.
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>
