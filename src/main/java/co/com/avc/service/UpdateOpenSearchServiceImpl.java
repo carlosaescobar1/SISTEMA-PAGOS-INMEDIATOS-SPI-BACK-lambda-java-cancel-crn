@@ -3,33 +3,41 @@ package co.com.avc.service;
 import co.com.ath.commons.util.ATHException;
 import co.com.ath.commons.util.Util;
 import co.com.ath.commons.util.constants.MessagesEnum;
+import co.com.avc.constants.BatchEnum;
 import co.com.avc.constants.ConstantsEnum;
 import co.com.avc.constants.ResponseCodeEnum;
 import co.com.avc.mapper.IndexBatchMapper;
 import co.com.avc.mapper.IndexRejectedMapper;
 import co.com.avc.models.MessageDto;
 import co.com.avc.models.MessageDtoBatch;
-import co.com.avc.models.dynamo.DynamoSpiDto;
+import co.com.avc.models.dynamoAth.DynamoSpiDto;
 import co.com.ath.opensearch.logs.constants.ActionConstants;
 import co.com.ath.opensearch.logs.constants.IndexConstants;
 import co.com.ath.opensearch.logs.entity.index_batch.OSIndexBatch;
 import co.com.ath.opensearch.logs.entity.index_rejected.OSIndexRejected;
 import co.com.ath.redebanconn.model.HeadersRq;
 import co.com.avc.service.interfaces.IUpdateOpenSearchService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.context.ApplicationContext;
-import io.micronaut.serde.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch.core.IndexRequest;
 import org.opensearch.client.opensearch.core.IndexResponse;
 import org.opensearch.client.opensearch.core.SearchTemplateResponse;
+import org.opensearch.client.opensearch.core.UpdateResponse;
+import org.opensearch.client.opensearch.core.search.Hit;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static co.com.avc.constants.BatchEnum.*;
 
 @Slf4j
 @AllArgsConstructor
@@ -37,8 +45,8 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
 
     private final OpenSearchClient openSearchClient;
 
-    private final ObjectMapper objectMapper = ApplicationContext.run().getBean(ObjectMapper.class);
-    ;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new ObjectMapper();
+
     private final StringWriter errors = new StringWriter();
 
     private final IndexBatchMapper indexBatchMapper;
@@ -51,19 +59,15 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
     @Override
     public void addElement(Object document, IndexConstants indexConstant) {
 
+        Map<String, Object> jsonMap = objectMapper.convertValue(document, HashMap.class);
 
+        IndexRequest<Map<String, Object>> request = IndexRequest.of(i -> i
+                .index(indexConstant.getValue())
+                .document(jsonMap));
         try {
-            Map<String, Object> jsonMap = objectMapper.readValue(Util.object2String(document), HashMap.class);
-
-            log.info("Documento: {}", Util.object2StringWithNulls(document));
-
-            IndexRequest<Map<String, Object>> request = IndexRequest.of(i -> i
-                    .index(indexConstant.getValue())
-                    .document(jsonMap));
-
             IndexResponse response = openSearchClient.index(request);
             log.info("El objeto se guardo exitosamente, objeto con el id: {}", response.id());
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Error al guardar el siguiente registro en OpenSearch: {}",
                     Util.object2StringWithNulls(document));
             log.error("{}{}", ConstantsEnum.ERROR_SAVE.getValue(), e.getMessage(), e);
@@ -97,19 +101,22 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
         }
     }
 
-    public long searchKey(DynamoSpiDto dynamoSpiDto) {
-
+    public long searchKey(String keyId) {
+        if (keyId == null || keyId.isEmpty()) {
+            log.error("El keyId es nulo o vacío, no se puede buscar en OpenSearch");
+            throw new ATHException("INVALID_KEY_ID", "El keyId no puede ser nulo o vacío", 400);
+        }
 
         SearchTemplateResponse<HashMap> searchResponse;
         long hitsSize;
 
         Map<String, JsonData> params = new HashMap<>();
 
-        params.put(ConstantsEnum.OP_PARAMETER_KEY_TYPE.getValue(),
-                JsonData.of(dynamoSpiDto.getKey().getKeyType()));
+
+
 
         params.put(ConstantsEnum.OP_PARAMETER_KEY_VALUE.getValue(),
-                JsonData.of(dynamoSpiDto.getKey().getKeyId()));
+                JsonData.of(keyId));
 
         try {
             searchResponse = openSearchClient.searchTemplate(s -> s
@@ -121,9 +128,14 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
 
             hitsSize = searchResponse.hits().total().value();
 
+        } catch (OpenSearchException e) {
+            log.error("Error al buscar en OpenSearch: Índice o template no encontrado: {}", e.getMessage());
+            throw new ATHException("OS_INDEX_NOT_FOUND", "Índice o template no encontrado en OpenSearch", 500);
+        } catch (IOException e) {
+            log.error("Error de conexión con OpenSearch: {}", e.getMessage());
+            throw new ATHException("OS_CONNECTION_ERROR", "Fallo de conexión con OpenSearch", 503);
         } catch (Exception e) {
-            e.printStackTrace(new PrintWriter(errors));
-            log.error("{}{}", ConstantsEnum.ERROR_CONNECTION.getValue(), errors.toString());
+            log.error("Error inesperado al buscar en OpenSearch: {}", e.getMessage());
             throw new ATHException(MessagesEnum.DEFAULT_ERROR_RESPONSE.getCode(),
                     MessagesEnum.DEFAULT_ERROR_RESPONSE.getMessage(),
                     MessagesEnum.DEFAULT_ERROR_RESPONSE.getHttpCode());
@@ -132,6 +144,7 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
 
     }
 
+    @Override
     public long searchBatch(DynamoSpiDto dynamoSpiDto) {
 
         SearchTemplateResponse<HashMap> searchResponse;
@@ -145,16 +158,17 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
         try {
             searchResponse = openSearchClient.searchTemplate(s -> s
                             .index(IndexConstants.SONDA_INDEX.getValue())
-                            .id(ConstantsEnum.INDEX_BATCH_BY_KEY_TEMPLATE.getValue())
+                            .id(BatchEnum.BATCH_INDEX_BY_KEY_TEMPLATE.getValue())
                             .params(params)
                     ,
                     HashMap.class);
 
             hitsSize = searchResponse.hits().total().value();
 
+
         } catch (Exception e) {
             e.printStackTrace(new PrintWriter(errors));
-            log.error("{}{}", ConstantsEnum.ERROR_CONNECTION.getValue(), errors.toString());
+            log.error("{}{}", ConstantsEnum.ERROR_CONNECTION.getValue(), errors);
             throw new ATHException(MessagesEnum.DEFAULT_ERROR_RESPONSE.getCode(),
                     MessagesEnum.DEFAULT_ERROR_RESPONSE.getMessage(),
                     MessagesEnum.DEFAULT_ERROR_RESPONSE.getHttpCode());
@@ -162,6 +176,7 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
         return hitsSize;
 
     }
+
 
     public Map<String, Object> updateRetryMapper(
             OSIndexBatch osIndexBatch,
@@ -179,19 +194,20 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
         if (newRetry < paramterRetry) {
 
             jsonMap.put("retryBatch", newRetry);
-            jsonMap.put("blockedBatch", ConstantsEnum.UNLOCK_BATCH.getValue());
+            jsonMap.put("blockedBatch", BATCH_UNLOCK.getValue());
+
 
         } else {
-
-            jsonMap.put("blockedBatch", ConstantsEnum.BLOCK_BATCH.getValue());
-            jsonMap.put("statusBatch", ConstantsEnum.FAILED_BATCH.getValue());
+            log.info("Ingreso a indice de Rechazados");
+            jsonMap.put("blockedBatch", BATCH_BLOCK.getValue());
+            jsonMap.put("statusBatch", BATCH_FAILED.getValue());
             jsonMap.put("retryBatch", newRetry);
 
             DynamoSpiDto dynamoSpiDto = (DynamoSpiDto)
                     Util.string2objectWhitNulls(osIndexBatch.getRqServiceObject(),
                             DynamoSpiDto.class);
 
-            saveIndexRejected(dynamoSpiDto, fileName, errorType, errorDesc, rqId, osIndexBatch.getRqId());
+            saveIndexRejected(dynamoSpiDto, fileName, errorType, errorDesc, rqId);
 
         }
 
@@ -208,8 +224,8 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
         Map<String, Object> jsonMap = new HashMap<>();
 
 
-        jsonMap.put("blockedBatch", ConstantsEnum.BLOCK_BATCH.getValue());
-        jsonMap.put("statusBatch", ConstantsEnum.SUCCESS_BATCH.getValue());
+        jsonMap.put("blockedBatch", BATCH_BLOCK.getValue());
+        jsonMap.put("statusBatch", BATCH_SUCCESS.getValue());
         jsonMap.put("retryBatch", newRetry);
 
         updateElement(jsonMap, messageDtoBatch.getIdOpensearch());
@@ -217,156 +233,57 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
         return jsonMap;
     }
 
-    public Map<String, Object> updateBadTryFirstAttemp(OSIndexBatch osIndexBatch, String idOpensearch) {
-
-        log.info("Inicio updateBadTryFirstAttemp");
-
-        int newRetry = (int) osIndexBatch.getRetryBatch() + 1;
-
-        log.info("Reintento actual: {}", newRetry);
-
-        Map<String, Object> jsonMap = new HashMap<>();
-
-        jsonMap.put("blockedBatch", ConstantsEnum.BLOCK_BATCH.getValue());
-        jsonMap.put("statusBatch", ConstantsEnum.FAILED_BATCH.getValue());
-        jsonMap.put("retryBatch", newRetry);
-
-        updateElement(jsonMap, idOpensearch);
-
-        return jsonMap;
-    }
-
-
     @Override
     public void saveIndexRejected(
             DynamoSpiDto dynamoSpiDto,
             String fileName,
             String errorType,
             String errorDesc,
-            String rqId,
-            String rqUUID
+            String rqId
+
     ) {
         OSIndexRejected osIndexRejected = indexRejectedMapper.indexRejected(
                 dynamoSpiDto,
                 fileName,
                 errorType,
                 errorDesc,
-                rqId,
-                rqUUID
+                rqId
         );
         log.info("OSIndexRejected: {}", Util.object2StringWithNulls(osIndexRejected));
         addElement(osIndexRejected, IndexConstants.REJECTED_INDEX);
     }
 
-    @Override
-    public void processOpensearchAction(MessageDto messageDto, DynamoSpiDto dynamoSpiDto, HeadersRq headersRq,
-                                        String fileName, String errorType, String errorDesc, String rqId, String subject) {
-
-        OSIndexBatch osIndexBatch = indexBatchMapper.mapEnrollmentRqToIndexBatch(dynamoSpiDto,
-                headersRq, ActionConstants.EVENT_BATCH_ENROLL.getValue(), fileName);
-
-        if (errorType.equals(ResponseCodeEnum.RED_PERSON_ERROR_CREATED_STATUS_CODE.getValue())
-                || errorType.equals(ResponseCodeEnum.RED_PERSON_ERROR_BODY_STATUS_CODE.getValue())) {
-
-            log.info("ENTRO A INDICE DE RECHAZADOS");
-            saveIndexRejected(dynamoSpiDto, fileName, errorType, errorDesc, rqId, osIndexBatch.getRqId());
-            if (subject.equalsIgnoreCase(ConstantsEnum.SUBJECT_BATCH.getValue())) {
-                updateBadTryFirstAttemp(osIndexBatch, messageDto.getMessageDtoBatch().getIdOpensearch());
-            }
-
-            return;
-        }
-
-        if (messageDto.getMessageDtoBatch() != null) {
-
-            updateElement(
-                    updateRetryMapper(
-                            messageDto.getMessageDtoBatch().getOsIndexBatch(),
-                            fileName, errorType, errorDesc, rqId
-                    ),
-                    messageDto.getMessageDtoBatch().getIdOpensearch()
-            );
-
-        } else {
-
-            addElement(osIndexBatch, IndexConstants.SONDA_INDEX);
-
-        }
-    }
 
     @Override
-    public void processSuccessBatchAction(MessageDto messageDto) {
+    public void processSuccessBatchAction(MessageDtoBatch messageDto) {
 
-        if (messageDto.getMessageDtoBatch() != null) {
+        if (messageDto != null) {
 
             updateElement(
                     updateSuccessRetryMapper(
-                            messageDto.getMessageDtoBatch()
+                            messageDto
                     ),
-                    messageDto.getMessageDtoBatch().getIdOpensearch()
+                    messageDto.getIdOpensearch()
             );
 
-        } else {
-            return;
         }
-
     }
 
     @Override
-    public void processSuccessDirAvalAction(MessageDto messageDto,
-                                            String fileName,
-                                            String errorType,
-                                            String errorDesc,
-                                            String rqId,
-                                            String rqUUID) {
+    public void processOpensearchAction(MessageDtoBatch messageDto, String fileName, String errorType, String errorDesc, String rqId) {
 
         DynamoSpiDto dynamoSpiDto = getDynamoSpiDto(messageDto);
 
-
-        OSIndexBatch osIndexBatch = indexBatchMapper.mapEnrollmentRqToIndexBatch(dynamoSpiDto,
-                rqUUID,
-                ActionConstants.EVENT_BATCH_ENROLL.getValue(),
-                fileName);
+        OSIndexBatch osIndexBatch = indexBatchMapper.mapCancelRqToIndexBatch(dynamoSpiDto, rqId,
+                 ActionConstants.ONLINE_CANCELLATION.getValue(), fileName, messageDto);
 
 
-        if (messageDto.getMessageDtoBatch() != null) {
+        if (messageDto.getOsIndexBatch() != null) {
 
             updateElement(
-                    updateRetryMapper(messageDto.getMessageDtoBatch().getOsIndexBatch(),
-                            fileName, errorType, errorDesc, rqId
-                    ),
-                    messageDto.getMessageDtoBatch().getIdOpensearch());
-
-        } else {
-
-            addElement(osIndexBatch, IndexConstants.SONDA_INDEX);
-
-        }
-
-    }
-
-    @Override
-    public void processOpensearchAction(MessageDto messageDto,
-                                        String fileName,
-                                        String errorType,
-                                        String errorDesc,
-                                        String rqId,
-                                        String rqUUID) {
-
-        DynamoSpiDto dynamoSpiDto = getDynamoSpiDto(messageDto);
-
-        OSIndexBatch osIndexBatch = indexBatchMapper.mapEnrollmentRqToIndexBatch(dynamoSpiDto,
-                rqUUID,
-                ActionConstants.EVENT_BATCH_ENROLL.getValue(),
-                fileName);
-
-
-        if (messageDto.getMessageDtoBatch() != null) {
-
-            updateElement(
-                    updateRetryMapper(messageDto.getMessageDtoBatch().getOsIndexBatch(),
+                    updateRetryMapper(messageDto.getOsIndexBatch(),
                             fileName, errorType, errorDesc, rqId),
-                    messageDto.getMessageDtoBatch().getIdOpensearch());
+                    messageDto.getIdOpensearch());
 
         } else {
 
@@ -375,14 +292,130 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
         }
     }
 
-    private DynamoSpiDto getDynamoSpiDto(MessageDto messageDto) {
+    private DynamoSpiDto getDynamoSpiDto(MessageDtoBatch messageDto) {
 
-        return messageDto.getMessageDtoBatch() != null ?
-                (DynamoSpiDto) Util.string2object(
-                        messageDto.getMessageDtoBatch().getOsIndexBatch().getRqServiceObject(),
-                        DynamoSpiDto.class) :
-                messageDto.getMessageDtoDynamo().getDynamoSpiDto();
+        return (DynamoSpiDto) Util.string2object(
+                messageDto.getOsIndexBatch().getRqServiceObject(),
+                DynamoSpiDto.class);
 
     }
+
+
+    public void keyProcessor(List<Hit<HashMap>> hits) {
+
+        for (Hit<HashMap> hit : hits) {
+
+            log.info("Registro recuperados de Index Batch: {}", Util.object2String(hit));
+
+            blockLog(hit);
+
+        }
+        log.info("Finaliza proceso de actualizacion en  IndexBatch");
+
+    }
+
+
+    @Override
+    public SearchTemplateResponse<HashMap> searchTemplateKey(String keyId) { //Aqui se consulta la llave desde este servicio despues de
+        //Sincronizar con OpenSearch
+
+
+        SearchTemplateResponse<HashMap> searchResponse;
+        List<Hit<HashMap>> hits;
+        long hitsSize;
+
+        Map<String, JsonData> params = new HashMap<>();
+
+
+
+        params.put(ConstantsEnum.OP_PARAMETER_KEY_VALUE.getValue(),
+                JsonData.of(keyId));
+        try {
+            searchResponse = openSearchClient.searchTemplate(s -> s
+                            .index(IndexConstants.DYNAMO_INDEX.getValue())
+                            .id(ConstantsEnum.INDEX_KEY_TEMPLATE.getValue())
+                            .params(params)
+                    ,
+                    HashMap.class);
+
+            hitsSize = searchResponse.hits().total().value();
+            hits = searchResponse.hits().hits();
+            log.info("hits size" + hitsSize);
+        } catch (Exception e) {
+            e.printStackTrace(new PrintWriter(errors));
+            log.error("{}{}", ConstantsEnum.ERROR_CONNECTION.getValue(), errors);
+            throw new ATHException(MessagesEnum.DEFAULT_ERROR_RESPONSE.getCode(),
+                    MessagesEnum.DEFAULT_ERROR_RESPONSE.getMessage(),
+                    MessagesEnum.DEFAULT_ERROR_RESPONSE.getHttpCode());
+        }
+        return searchResponse;
+
+    }
+
+
+    public void blockLog(Hit<HashMap> hit) {
+
+        if (hit.source().get(BATCH_STATUS.getValue()) != null &&
+                hit.source().get(BATCH_STATUS.getValue()).toString().
+                        equalsIgnoreCase(BATCH_PENDING.getValue())) {
+
+            Map<String, Object> jsonMap = new HashMap<>();
+            jsonMap.put(BATCH_STATUS.getValue(), BATCH_CANCEL.getValue());
+            try {
+                UpdateResponse<Map> actualiza = openSearchClient.update(j -> j
+                                .index(BatchEnum.BATCH_INDEX.getValue())
+                                .id(hit.id())
+                                .doc(jsonMap)
+                                .ifSeqNo(hit.seqNo())
+                                .ifPrimaryTerm(hit.primaryTerm())
+                        , Map.class);
+
+
+            } catch (Exception e) {
+
+                e.printStackTrace(new PrintWriter(errors));
+                log.error(ConstantsEnum.ERROR_CONNECTION.getValue() + errors);
+                throw new ATHException(MessagesEnum.DEFAULT_ERROR_RESPONSE.getCode(),
+                        MessagesEnum.DEFAULT_ERROR_RESPONSE.getMessage(),
+                        MessagesEnum.DEFAULT_ERROR_RESPONSE.getHttpCode());
+
+            }
+        }
+    }
+
+    @Override
+    public SearchTemplateResponse<HashMap> searchBatch(String keyId) {
+
+        SearchTemplateResponse<HashMap> searchResponse;
+        long hitsSize;
+
+        Map<String, JsonData> params = new HashMap<>();
+
+        params.put(ConstantsEnum.OP_PARAMETER_KEY_VALUE.getValue(),
+                JsonData.of(keyId));
+
+        try {
+            searchResponse = openSearchClient.searchTemplate(s -> s
+                            .index(IndexConstants.SONDA_INDEX.getValue())
+                            .id(BatchEnum.BATCH_INDEX_BY_KEY_TEMPLATE.getValue())
+                            .params(params)
+                    ,
+                    HashMap.class);
+
+            hitsSize = searchResponse.hits().total().value();
+
+
+        } catch (Exception e) {
+            e.printStackTrace(new PrintWriter(errors));
+            log.error("{}{}", ConstantsEnum.ERROR_CONNECTION.getValue(), errors);
+            throw new ATHException(MessagesEnum.DEFAULT_ERROR_RESPONSE.getCode(),
+                    MessagesEnum.DEFAULT_ERROR_RESPONSE.getMessage(),
+                    MessagesEnum.DEFAULT_ERROR_RESPONSE.getHttpCode());
+        }
+        return searchResponse;
+
+    }
+
+
 
 }

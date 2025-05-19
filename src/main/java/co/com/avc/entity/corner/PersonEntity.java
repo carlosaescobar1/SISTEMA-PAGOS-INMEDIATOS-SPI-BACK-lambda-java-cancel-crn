@@ -1,4 +1,4 @@
-package co.com.avc.entity;
+package co.com.avc.entity.corner;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument;

@@ -1,4 +1,4 @@
-package co.com.avc.models.parameter;
+package co.com.avc.models.dynamoAth;
 
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.SerdeImport;
@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * ParamVaultUpload
+ * CustIdentDto
+ * <p>
+ * Objeto que guarda la información de la identificación del cliente.
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>
@@ -27,13 +29,16 @@ import lombok.Setter;
 @Getter
 @Setter
 @Introspected
-@SerdeImport(ParamVaultUpload.class)
-public class ParamVaultUpload {
+@SerdeImport(CustIdentDto.class)
+public class CustIdentDto {
 
-    private String vaultName;
-    private String arnSnsVaultDelete;
-    private String arnUrlUpdateVault;
-    private String consentMigrate;
-    private String urlCancelVault;
-    private String urlUpdateVault;
+    /**
+     * Tipo de identificación del cliente.
+     */
+    private String custIdentType;
+
+    /**
+     * Número de identificación del cliente.
+     */
+    private String custIdentNum;
 }

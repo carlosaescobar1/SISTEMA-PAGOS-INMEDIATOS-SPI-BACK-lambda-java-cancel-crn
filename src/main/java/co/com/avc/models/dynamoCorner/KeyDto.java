@@ -1,12 +1,16 @@
-package co.com.avc.models.parameter;
+package co.com.avc.models.dynamoCorner;
 
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.SerdeImport;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * ParamVaultUpload
+ * KeyDto
+ * <p>
+ * Objeto que guarda la información de la llave.
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>
@@ -26,14 +30,20 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Introspected
-@SerdeImport(ParamVaultUpload.class)
-public class ParamVaultUpload {
+@SerdeImport(KeyDto.class)
+public class KeyDto {
 
-    private String vaultName;
-    private String arnSnsVaultDelete;
-    private String arnUrlUpdateVault;
-    private String consentMigrate;
-    private String urlCancelVault;
-    private String urlUpdateVault;
+    /**
+     * Tipo de llave.
+     */
+    private String keyType;
+
+    /**
+     * Valor de la llave.
+     */
+    private String keyId;
+
 }

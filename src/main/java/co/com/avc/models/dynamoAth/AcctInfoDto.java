@@ -1,16 +1,13 @@
-package co.com.avc.models.dynamo;
+package co.com.avc.models.dynamoAth;
 
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.SerdeImport;
-import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * PaymentMethodDto
- * <p>
- * Objeto que guarda la información de la llave.
+ * AcctInfoDto
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>
@@ -30,19 +27,24 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Introspected
-@SerdeImport(PaymentMethodDto.class)
-public class PaymentMethodDto {
+@EqualsAndHashCode
+@SerdeImport(AcctInfoDto.class)
+public class AcctInfoDto {
 
     /**
-     * Tipo de medio de pago Ahorros, corriente
+     * Tipo de cuenta.
      */
-    private String type_payment_acc;
+    private String acctType;
 
     /**
-     * Numero de la cuenta
+     * Número de la cuenta.
      */
-    private String account_number;
+    private String acctId;
+
+    /**
+     * Id del banco.
+     */
+    private String bankId;
+
 }

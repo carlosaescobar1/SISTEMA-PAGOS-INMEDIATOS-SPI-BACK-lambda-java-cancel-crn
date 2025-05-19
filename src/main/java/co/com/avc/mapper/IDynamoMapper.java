@@ -1,7 +1,7 @@
 package co.com.avc.mapper;
 
-import co.com.avc.entity.DynamoSpiEntity;
-import co.com.avc.models.dynamo.DynamoSpiDto;
+import co.com.avc.entity.Ath.DynamoSpiEntity;
+import co.com.avc.models.dynamoAth.DynamoSpiDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 @Mapper

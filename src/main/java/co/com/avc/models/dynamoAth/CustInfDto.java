@@ -1,16 +1,14 @@
-package co.com.avc.models.dynamo;
+package co.com.avc.models.dynamoAth;
 
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.SerdeImport;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * KeyDto
+ * CustInfDto
  * <p>
- * Objeto que guarda la información de la llave.
+ * Objeto que guarda la información del cliente.
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>
@@ -30,20 +28,38 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Introspected
-@SerdeImport(KeyDto.class)
-public class KeyDto {
+@SerdeImport(CustInfDto.class)
+public class CustInfDto {
 
     /**
-     * Tipo de llave.
+     * Primer nombre del cliente.
      */
-    private String keyType;
+    private String custFirstName;
 
     /**
-     * Valor de la llave.
+     * Segundo nombre del cliente.
      */
-    private String keyId;
+    private String custSecondName;
+
+    /**
+     * Primer apellido del cliente.
+     */
+    private String custFirstLastName;
+
+    /**
+     * Segundo apellido del cliente.
+     */
+    private String custSecondLastName;
+
+    /**
+     * Nombre legal del cliente, el que tiene la cedula
+     */
+    private String custLegalName;
+
+    /**
+     * Objeto que guarda la información de la identificación del cliente.
+     */
+    private CustIdentDto custIdent;
 
 }

@@ -1,8 +1,8 @@
 package co.com.avc.service.interfaces;
 
-import co.com.avc.models.MessageDto;
+import co.com.ath.redebanconn.model.HeadersRq;
 import co.com.avc.models.MessageDtoBatch;
-import co.com.avc.models.dynamo.DynamoSpiDto;
+import co.com.avc.models.dynamoAth.DynamoSpiDto;
 import co.com.ath.opensearch.logs.constants.IndexConstants;
 import co.com.ath.cornerconn.models.CornersHeadersRq;
 import org.opensearch.client.opensearch.core.SearchTemplateResponse;
@@ -41,13 +41,13 @@ public interface IUpdateOpenSearchService {
     void updateElement(Map<String, Object> jsonMap, String id);
 
     //
-    long searchKey(DynamoSpiDto dynamoSpiDto);
+    long searchKey(String keyId);
     //
     long searchBatch(DynamoSpiDto dynamoSpiDto);
 
     SearchTemplateResponse<HashMap> searchBatch(String keyId);
 
-    SearchTemplateResponse<HashMap> searchTemplateKey(String keyId, String keyType);
+    SearchTemplateResponse<HashMap> searchTemplateKey(String keyId);
     void keyProcessor(List<Hit<HashMap>> hits);
 
 
@@ -56,8 +56,8 @@ public interface IUpdateOpenSearchService {
             String fileName,
             String errorType,
             String errorDesc,
-            String rqId,
-            String rqUUID, CornersHeadersRq headersRq
+            String rqId
+
     );
 
     void processSuccessBatchAction(MessageDtoBatch messageDto);
@@ -67,8 +67,8 @@ public interface IUpdateOpenSearchService {
             String fileName,
             String errorType,
             String errorDesc,
-            String rqId,
-            String rqUUID
+            String rqId
+
     );
 
 }

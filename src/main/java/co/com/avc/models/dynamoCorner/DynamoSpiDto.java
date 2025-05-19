@@ -1,7 +1,5 @@
-package co.com.avc.models.dynamo;
+package co.com.avc.models.dynamoCorner;
 
-import co.com.avc.constants.ConstantsEnum;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.core.annotation.ReflectiveAccess;

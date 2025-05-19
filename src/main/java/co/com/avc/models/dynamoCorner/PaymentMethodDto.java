@@ -1,12 +1,16 @@
-package co.com.avc.models.parameter;
+package co.com.avc.models.dynamoCorner;
 
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.SerdeImport;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * ParamVaultUpload
+ * PaymentMethodDto
+ * <p>
+ * Objeto que guarda la información de la llave.
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>
@@ -26,14 +30,19 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Introspected
-@SerdeImport(ParamVaultUpload.class)
-public class ParamVaultUpload {
+@SerdeImport(PaymentMethodDto.class)
+public class PaymentMethodDto {
 
-    private String vaultName;
-    private String arnSnsVaultDelete;
-    private String arnUrlUpdateVault;
-    private String consentMigrate;
-    private String urlCancelVault;
-    private String urlUpdateVault;
+    /**
+     * Tipo de medio de pago Ahorros, corriente
+     */
+    private String type_payment_acc;
+
+    /**
+     * Numero de la cuenta
+     */
+    private String account_number;
 }

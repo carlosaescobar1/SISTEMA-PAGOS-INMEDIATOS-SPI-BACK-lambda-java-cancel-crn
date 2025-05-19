@@ -7,7 +7,7 @@ import co.com.avc.models.MessageDto;
 import co.com.avc.models.MessageDtoBatch;
 import co.com.avc.models.MessageDtoDynamo;
 import co.com.avc.models.SqsDto;
-import co.com.avc.models.dynamo.DynamoSpiDto;
+import co.com.avc.models.dynamoAth.DynamoSpiDto;
 import co.com.ath.redebanconn.constants.RedDefaultValuesEnum;
 import co.com.ath.redebanconn.model.*;
 import co.com.ath.redebanconn.model.enrollment.EnrollmentRq;

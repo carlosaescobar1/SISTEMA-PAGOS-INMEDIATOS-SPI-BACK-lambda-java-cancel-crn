@@ -1,4 +1,4 @@
-package co.com.avc.models.dynamo;
+package co.com.avc.models.dynamoCorner;
 
 
 import io.micronaut.core.annotation.Introspected;

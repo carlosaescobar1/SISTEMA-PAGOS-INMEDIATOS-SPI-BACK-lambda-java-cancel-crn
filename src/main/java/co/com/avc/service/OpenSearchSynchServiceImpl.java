@@ -1,10 +1,9 @@
 package co.com.avc.service;
 
 import co.com.ath.opensearch.logs.entity.index_key.OSIndexKey;
-import co.com.avc.entity.DynamoSpiEntity;
+import co.com.avc.entity.Ath.DynamoSpiEntity;
 import co.com.avc.mapper.IOpenSearchMapper;
 import co.com.avc.mapper.IOpenSearchMapperImpl;
-import co.com.ath.opensearch.logs.constants.ActionConstants;
 import co.com.ath.opensearch.sync.constants.SyncActionEnum;
 import co.com.ath.opensearch.sync.service.IBlackListService;
 import co.com.ath.opensearch.sync.service.IOpensearchService;
@@ -55,10 +54,10 @@ public class OpenSearchSynchServiceImpl implements IOpenSearchSynchService {
      * Instancia del servicio de las listas negras de
      * la librería de sincronización
      */
-    private final IBlackListService blackListService;
+    //private final IBlackListService blackListService;
 
     private final IOpenSearchMapper openSearchMapper = new IOpenSearchMapperImpl();
-
+    
     @Override
     public void openSearchSyncCancel(DynamoSpiEntity dynamoSpiEntity) {
         opensearchService.syncKey(IOpenSearchMapper.INSTANCE.dynamoEntityToIndexKey(dynamoSpiEntity),

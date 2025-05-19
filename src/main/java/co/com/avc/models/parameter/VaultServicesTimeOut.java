@@ -11,5 +11,5 @@ import lombok.Setter;
 @SerdeImport(VaultServicesTimeOut.class)
 public class VaultServicesTimeOut {
 
-    private int redEnrollmentTimeOut;
+    private int redDeleteTimeOut;
 }

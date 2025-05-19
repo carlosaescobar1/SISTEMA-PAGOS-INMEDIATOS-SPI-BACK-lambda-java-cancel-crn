@@ -1,4 +1,4 @@
-package co.com.avc.entity;
+package co.com.avc.entity.Ath;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument;
@@ -11,7 +11,7 @@ import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
 /**
- * AcctInfoEntity
+ * KeyEntity
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>
@@ -34,23 +34,23 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 @ToString
 @Introspected
 @ReflectiveAccess
-@SerdeImport(PaymentMethodEntity.class)
+@SerdeImport(KeyEntity.class)
 @DynamoDBDocument
-public class PaymentMethodEntity {
-    @DynamoDBAttribute(attributeName = "type_payment_acc")
-    private String type_payment_acc;
+public class KeyEntity {
 
-    @DynamoDBAttribute(attributeName = "account_number")
-    private String account_number;
+    @DynamoDBAttribute
+    private String keyType;
 
-    public static final TableSchema<PaymentMethodEntity> SCHEMA =
-            TableSchema.builder(PaymentMethodEntity.class)
-                    .newItemSupplier(PaymentMethodEntity::new)
-                    .addAttribute(String.class, a -> a.name("type_payment_acc")
-                            .getter(PaymentMethodEntity::getType_payment_acc)
-                            .setter(PaymentMethodEntity::setType_payment_acc))
-                    .addAttribute(String.class, a -> a.name("account_number")
-                            .getter(PaymentMethodEntity::getAccount_number)
-                            .setter(PaymentMethodEntity::setAccount_number))
-                    .build();
+    @DynamoDBAttribute
+    private String keyId;
+
+    public static final TableSchema<KeyEntity> SCHEMA = TableSchema.builder(KeyEntity.class)
+            .newItemSupplier(KeyEntity::new)
+            .addAttribute(String.class, a -> a.name("keyType")
+                    .getter(KeyEntity::getKeyType)
+                    .setter(KeyEntity::setKeyType))
+            .addAttribute(String.class, a -> a.name("keyId")
+                    .getter(KeyEntity::getKeyId)
+                    .setter(KeyEntity::setKeyId))
+            .build();
 }

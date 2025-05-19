@@ -1,12 +1,15 @@
-package co.com.avc.models.parameter;
+package co.com.avc.models;
 
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.SerdeImport;
 import lombok.Getter;
 import lombok.Setter;
-
 /**
- * ParamVaultUpload
+ * MsgInformationResponseSuccess
+ * <p>
+ * Almacena el valor de una clave (value_key) cuando hay una respuesta exitosa del servicio.
  * <p>
  * Desarrollo ATH - SPBVI
  * <p>
@@ -27,13 +30,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @Introspected
-@SerdeImport(ParamVaultUpload.class)
-public class ParamVaultUpload {
+@SerdeImport(MsgInformationResponseSuccess.class)
+public class MsgInformationResponseSuccess {
+    /**
+     * Valor de la llave
+     */
+    @JsonProperty("value_key")
+    private String value_key;
 
-    private String vaultName;
-    private String arnSnsVaultDelete;
-    private String arnUrlUpdateVault;
-    private String consentMigrate;
-    private String urlCancelVault;
-    private String urlUpdateVault;
 }

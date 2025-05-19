@@ -3,14 +3,38 @@ package co.com.avc.repository;
 import co.com.ath.commons.util.ATHException;
 import co.com.ath.commons.util.Util;
 import co.com.avc.constants.ResponseServiceEnum;
-import co.com.avc.entity.DynamoSpiEntity;
+import co.com.avc.entity.Ath.DynamoSpiEntity;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 
-import static co.com.avc.entity.DynamoSpiEntity.TABLE_SCHEMA_DYNAMO_SPI;
-
+import static co.com.avc.entity.Ath.DynamoSpiEntity.TABLE_SCHEMA_DYNAMO_SPI;
+/**
+ * DynamoRepository
+ * <p>
+ * Gestiona operaciones CRUD de objetos DynamoSpiEntity en DynamoDB.
+ * <p>
+ * Desarrollo ATH - AvalPay Center
+ * <p>
+ * Creado el : 25 de Julio de 2024
+ * <p>
+ * Autor: Luis F. Herreño Mateus
+ * <p>
+ * Requerimiento: Migración AvalPay Center
+ * <p>
+ * Copyright © A Toda Hora S.A. Todos los derechos reservados
+ * <p>
+ * Este software es confidencial y es propiedad de ATH, queda prohibido
+ * su uso, reproducción y copia de manera parcial o permanente salvo autorización
+ * expresa de A Toda Hora S.A o de quién represente sus derechos.
+ * <p>
+ * Clase encargada de mapear la conexion con Dynamo
+ *
+ * @author Luis F Herreno
+ * @version 1.0
+ * @since 1.0
+ */
 @Slf4j
 @AllArgsConstructor
 public class DynamoRepository {

@@ -55,7 +55,7 @@ public class ParameterStoreRepository {
             log.info("Inicia consulta parametros");
             Map<String, String> generalParameter = ParameterStoreUtil
                     .getParameters(ParameterStoreEnum.PARAMETER_GENERAL_PATH_URL.getValue());
-
+            //Agregado
             Map<String, String> cancellationParameter = ParameterStoreUtil
                     .getParameters(ParameterStoreEnum.PARAMETER_CANCELLATION_PATH_URL.getValue());
             parameterStoreDto.setArnSnsOpenSearch((ArnSnsOpenSearch)

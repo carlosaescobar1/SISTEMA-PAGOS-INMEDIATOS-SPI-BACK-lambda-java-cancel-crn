@@ -2,30 +2,30 @@ package co.com.avc;
 
 import co.com.ath.commons.util.ATHException;
 import co.com.ath.commons.util.Util;
-import co.com.avc.constants.ConstantsEnum;
-
-import co.com.avc.mapper.*;
-import co.com.avc.models.MessageDto;
-import co.com.avc.models.dynamo.DynamoSpiDto;
-import co.com.avc.models.parameter.ParameterStoreDto;
-import co.com.avc.models.SecretManagerDto;
-import co.com.avc.models.SqsDto;
-import co.com.ath.opensearch.logs.service.OpensearchLogService;
 import co.com.ath.opensearch.sync.service.BlackListServiceImpl;
 import co.com.ath.opensearch.sync.service.IBlackListService;
+import co.com.avc.constants.ConstantsEnum;
+import co.com.avc.entity.Ath.DynamoSpiEntity;
+import co.com.avc.mapper.*;
+import co.com.avc.models.*;
+import co.com.avc.models.dynamoAth.DynamoSpiDto;
+import co.com.avc.models.parameter.ParamVaultUpload;
+import co.com.avc.models.parameter.ParameterStoreDto;
+import co.com.ath.opensearch.logs.service.OpensearchLogService;
 import co.com.ath.opensearch.sync.service.IOpensearchService;
 import co.com.ath.opensearch.sync.service.OpensearchService;
-
-
-import co.com.avc.service.interfaces.IOpenSearchSynchService;
-import co.com.avc.service.interfaces.IUpdateOpenSearchService;
-import co.com.avc.service.interfaces.IValidateService;
 import co.com.avc.repository.*;
 import co.com.avc.service.*;
+import co.com.avc.service.interfaces.IOpenSearchSynchService;
+import co.com.avc.service.interfaces.ICorCancelBatchTransvService;
+import co.com.avc.service.interfaces.ICorCancelMigTransvService;
+import co.com.avc.service.interfaces.IUpdateOpenSearchService;
 import co.com.avc.util.IpSelectorUtil;
 import co.com.avc.util.SnsSelectorUtil;
 import co.com.avc.util.TimeLineUtil;
 import co.com.avc.util.VaultSelectorUtil;
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.function.aws.MicronautRequestHandler;
@@ -37,6 +37,10 @@ import java.io.StringWriter;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
+
+import static co.com.avc.constants.BatchEnum.BATCH_CANCEL_SUBJECT;
+import static co.com.avc.constants.BatchEnum.BATCH_SUBJECT;
+import static co.com.avc.constants.ConstantsEnum.KEY_ID_START_WITH;
 
 /**
  * Handler
@@ -71,10 +75,6 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
      */
     private String rqID;
 
-    /**
-     * UUID de la petición
-     */
-    private String rqUUID;
 
     /**
      * Mensaje recibido
@@ -107,17 +107,14 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
     private final ParameterStoreDto parameterStoreDto = parameterStoreRepository.getParameters();
 
     /**
-     * Método para seleccionar la Ip según al entidad
+     * Método para seleccionar la Ip según al entidad, BANCOS -Revisar----------------------------------------------------------------------->
      */
     private final IpSelectorUtil ipSelectorUtil = new IpSelectorUtil(parameterStoreDto.getRedebanConfigDto().getParamIp());
 
     /**
      * Mapper para crear el objeto del header de la petición
      */
-    private final HeadersMapper headersMapper = new HeadersMapper(
-            parameterStoreDto.getRedebanConfigDto().getParamBankUUID(),
-            ipSelectorUtil,
-            parameterStoreDto.getRedebanConfigDto().getOriginDtoList());
+
 
     /**
      * Servicio para obtener los valores de los secretos
@@ -155,7 +152,7 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
     private final IOpenSearchSynchService openSearchSynchService = new OpenSearchSynchServiceImpl(
             opensearchService,
             client,
-            blackListService
+            parameterStoreDto.getOpSearchQuerySize()
     );
 
     /**
@@ -175,20 +172,13 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
 
     private final SnsSelectorUtil snsSelectorUtil = new SnsSelectorUtil(parameterStoreDto.getArnSnsOpenSearch());
 
-    private final OpensearchLogService opensearchLogService = new OpensearchLogService();
+        private final OpensearchLogService opensearchLogService = new OpensearchLogService();
 
     private final DynamoBuilderRepository dynamoBuilderRepository = new DynamoBuilderRepository(parameterStoreDto.getRegion());
 
     private final DynamoRepository dynamoRepository = new DynamoRepository(
             dynamoBuilderRepository.getClient(),
             parameterStoreDto.getParamDynamo().getNameTable());
-
-    private final VaultSelectorUtil vaultSelectorUtil = new VaultSelectorUtil(parameterStoreDto.getParamActiveVault());
-
-    private final IValidateService validateUtil = new ValidateServiceImpl(
-            openSearchSynchService,
-            updateOpenSearchService
-    );
 
     private final IndexTimeLineMapper indexTimeLineMapper = new IndexTimeLineMapper(ipSelectorUtil);
 
@@ -197,18 +187,42 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
             snsSelectorUtil
     );
 
-    private final IRedEnrollmentTransvService redEnrollmentTransvService = new RedEnrollmentTransvServiceImpl(
-            headersMapper,
-            requestMapper,
-            updateOpenSearchService,
-            openSearchSynchService,
-            timeLineUtil,
-            indexBatchMapper,
-            parameterStoreDto.getParamFlowConfig(),
-            vaultSelectorUtil,
-            parameterStoreDto.getVaultServicesTimeOut(),
-            dynamoRepository
-    );
+    /**
+     * Instancia del servicio Corner------------------------------------------------------------------------------------------->
+     */
+    private final VaultSelectorUtil vaultSelectorUtil = new VaultSelectorUtil(parameterStoreDto.getParamActiveVault());
+    private final ParamVaultUpload paramVaultUpload = vaultSelectorUtil.selectorVault();
+
+    private final ICorCancelMigTransvService cancelTransvService =
+            new CorCancelMigTransvServiceImpl(
+                    timeLineUtil, indexBatchMapper, parameterStoreDto.getParamFlowConfig(), vaultSelectorUtil,
+                    parameterStoreDto.getVaultServicesTimeOut(), dynamoRepository, updateOpenSearchService,
+                    openSearchSynchService, paramVaultUpload);
+
+    private final ICorCancelBatchTransvService cancelBatchTransvService = new CorCancelBatchTransvServiceImpl(
+             timeLineUtil, indexBatchMapper,
+            parameterStoreDto.getParamFlowConfig(), vaultSelectorUtil,
+            parameterStoreDto.getVaultServicesTimeOut(), dynamoRepository, updateOpenSearchService,
+            openSearchSynchService, paramVaultUpload);
+
+    private final CorCancelCntServiceImpl cancelCntService = new CorCancelCntServiceImpl(
+             timeLineUtil, indexBatchMapper, parameterStoreDto.getParamFlowConfig(), vaultSelectorUtil,
+            parameterStoreDto.getVaultServicesTimeOut(), dynamoRepository, updateOpenSearchService,
+            openSearchSynchService, paramVaultUpload);
+
+
+
+    /**
+     * Instancia del convertidor de SQS a sonda
+     */
+    private final RqBatchMapper rqBatchMapper = new RqBatchMapper();
+
+    private final RqMigrationMapper rqMigrationMapper = new RqMigrationMapper();
+
+    private final RqDynamoSpiMapper rqDynamoSpiMapper = new RqDynamoSpiMapper();
+
+
+
 
 
     /**
@@ -229,35 +243,23 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
     @Override
     public Void execute(SQSEvent input) {
         try {
+            // Redirige los mensajes SQS al método correspondiente
             redirect(input);
         } catch (ATHException athExp) {
+            // Manejo de excepciones específicas de ATH
             athExp.printStackTrace(new PrintWriter(errors));
-
-            updateOpenSearchService
-                    .processOpensearchAction(
-                            eventRq, fileName,
-                            ConstantsEnum.ERROR_ATH_SERVICE.getValue(),
-                            athExp.getMessage(),
-                            rqID, rqUUID);
-
+            updateOpenSearchService.processOpensearchAction(
+                    null, fileName, ConstantsEnum.ERROR_ATH_SERVICE.getValue(),
+                    athExp.getMessage(), rqID);
             log.error("{}{}", ConstantsEnum.ERROR_ATH_SERVICE.getValue(), errors);
-
         } catch (Exception exp) {
+            // Manejo de excepciones generales
             exp.printStackTrace(new PrintWriter(errors));
-            updateOpenSearchService
-                    .processOpensearchAction(
-                            eventRq, fileName,
-                            ConstantsEnum.ERROR_ATH_SERVICE.getValue(),
-                            exp.getMessage(),
-                            rqID, rqUUID);
-
+            updateOpenSearchService.processOpensearchAction(
+                    null, fileName, ConstantsEnum.ERROR_ATH_SERVICE.getValue(),
+                    exp.getMessage(), rqID);
             log.error("{}{}", ConstantsEnum.ERROR_SERVICE.getValue(), errors);
-
         }
-//        finally {
-//            timeLineUtil.sendLogRs(dynamoSpiDto, rqUUID);
-//        }
-
         return null;
     }
 
@@ -271,51 +273,70 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
      *              del APIGateway.
      * @return Object objeto genérico que contiene la respuesta de la solicitud.
      */
-    private void redirect(SQSEvent input) {
-        log.info("Entra a redirect");
-        log.info("Table Name" + parameterStoreDto.getParamDynamo().getNameTable());
+    public void redirect(SQSEvent input) {
 
-        //Empiza a iterar sobre la lista creada de los mensajes que llegan por sqs
-        List<SQSEvent.SQSMessage> mensajes = input.getRecords();
-        for (SQSEvent.SQSMessage msg : mensajes) {
-            // Verifíca si el cuerpo del mensaje no está vacío.
-            if (msg.getBody() != null && !msg.getBody().isEmpty()) {
+        List<SQSEvent.SQSMessage> sqsRecordList = input.getRecords();
 
-                SecureRandom random = new SecureRandom();
-                //Numerico
-                rqID = String.valueOf(random.nextInt(99999999));
-                //Alfanumerico
-                rqUUID = UUID.randomUUID().toString();
-                //Se obtiene la fecha de operación
-                dateOperation = Util.createDate();
+        try {
+            for (SQSEvent.SQSMessage sqsRecord : sqsRecordList) {
 
-                //Mapeo del cuerpo del mensaje en un InputRequest
-                SqsDto sqsDto =
-                        (SqsDto) Util.string2object(msg.getBody(), SqsDto.class);
+                if (sqsRecord.getBody() != null && !sqsRecord.getBody().isEmpty()) {
+                    log.info("Body del sqs: {}", sqsRecord.getBody());
+                    SecureRandom secureRandom = new SecureRandom();
 
-                log.info("se recibe el mensaje: {}", Util.object2String(sqsDto));
-                //Se mapea el sqsDto a un MessageDto, usando REQUEST MAPPER, el cual es importante
-                MessageDto messageDto = requestMapper.messageDtoMapper(sqsDto);
+                    rqID = String.format("%08d", secureRandom.nextInt(100000000));
+                    //rqUUID = UUID.randomUUID().toString();
+                    SqsDto sqsDto = (SqsDto) Util.string2object(sqsRecord.getBody(), SqsDto.class);
 
-                eventRq = messageDto;
-                //Se contruye el objeto de la clase DynamoSpiDto, para interactuar con DynamoDB.
-                dynamoSpiDto = requestMapper.redirectDynamoData(messageDto, sqsDto.getSubject(), dateOperation);
-                // el subject es un sujeto de un correo electronio, es decir es otro modelo para enviar la infor
-                //Identificar si el mensaje es de tipo batch o sqs, batch es de cargues masivos
-                fileName = (messageDto.getMessageDtoBatch() != null ?
-                        messageDto.getMessageDtoBatch().getOsIndexBatch().getFileName()
-                        : sqsDto.getSubject()
-                );
+                    if (sqsDto.getSubject().equalsIgnoreCase(BATCH_SUBJECT.getValue())) {
 
-                //Validación de llaves permitidas
-                if (validateUtil.validateBannedKeys(dynamoSpiDto, fileName, rqID, rqUUID)) {
+                        MessageDtoBatch messageDtoBatch = rqBatchMapper.messageDtoMapper(sqsDto);
 
-                    //Servicio de creación en camara y dirAval
-                    redEnrollmentTransvService.redEnrollService(messageDto, sqsDto.getSubject(),
-                            dynamoSpiDto, rqID, dateOperation, rqUUID);
+                        dynamoSpiDto = rqDynamoSpiMapper.redirectDynamoBatch(messageDtoBatch);
+
+                        cancelBatchTransvService.corCancelBatchService(messageDtoBatch,
+                                sqsDto.getSubject(), dynamoSpiDto, rqID,
+                                 parameterStoreDto);
+                    } else if (sqsDto.getSubject().contains(BATCH_CANCEL_SUBJECT.getValue())) {
+
+                        MessageDtoKeysCancel messageDtoKeysCancel = rqMigrationMapper.messageDtoMapperCancel(sqsDto);
+                        String keyIdSk;
+
+                        keyIdSk =  messageDtoKeysCancel.getKeyId();
+                        DynamoSpiEntity dynamoSpiEntity = dynamoRepository.load(keyIdSk, keyIdSk);
+                        boolean dynEntity;
+
+                        if (dynamoSpiEntity == null) {
+                            //No se encontro registro en dynamo,
+                            dynEntity = false;
+                            dynamoSpiDto = rqDynamoSpiMapper.redirectDynamoCnt(messageDtoKeysCancel);
+                            cancelCntService.corCancelMigService(
+                                    sqsDto.getSubject(), dynamoSpiDto, rqID,
+                                     messageDtoKeysCancel, dynEntity);
+                        } else {
+                            // Se encontro registro en dynamo
+                            dynamoSpiDto = IDynamoMapper.INSTANCE.dynamoEntityToDynamoDto(dynamoSpiEntity);
+                            dynEntity = true;
+                            cancelCntService.corCancelMigService(
+                                    sqsDto.getSubject(), dynamoSpiDto, rqID,
+                                     messageDtoKeysCancel, dynEntity);
+                        }
+                    } else {
+                        MessageDtoDynamo messageDtoDynamo = rqMigrationMapper.messageDtoMapper(sqsDto);
+                        dynamoSpiDto = rqDynamoSpiMapper.redirectDynamoMig(messageDtoDynamo);
+
+                        cancelTransvService.corCancelMigService(sqsDto.getSubject(), dynamoSpiDto, rqID,
+                                 messageDtoDynamo.getFileName());
+                    }
                 }
-                log.info("Finalizo el proceso de la lambda");
             }
+        } catch (Exception e) {
+            /** Manejo de excepciones**/
+            e.printStackTrace(new PrintWriter(errors));
+            log.error("Error procesando la información del SQS: " + errors);
+
+
         }
     }
+
 }

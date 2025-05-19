@@ -1,7 +1,7 @@
 package co.com.avc.util;
 
 import co.com.avc.mapper.IndexTimeLineMapper;
-import co.com.avc.models.dynamo.DynamoSpiDto;
+import co.com.avc.models.dynamoAth.DynamoSpiDto;
 import co.com.ath.opensearch.logs.constants.ActionConstants;
 import co.com.ath.opensearch.logs.constants.TimeStampEnum;
 import co.com.ath.opensearch.logs.constants.TypeServiceConstants;
@@ -11,7 +11,7 @@ import co.com.ath.redebanconn.model.enrollment.EnrollmentRq;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class TimeLineUtil {
+public class    TimeLineUtil {
 
     /**
      * Dependencia inyectada por medio del constructor usada
@@ -42,18 +42,18 @@ public class TimeLineUtil {
      * Obtiene los parámetros en la clase MigrationKeyServiceImpl
      * método migrateKeys.
      *
-     * @param enrollmentRq modelo que representa el request de la
+     * @param dynamoSpiDto modelo que representa el request de la
      *                     petición de creación en línea.
      */
-    public void sendLogRq(EnrollmentRq enrollmentRq, HeadersRq headersRq) {
+    public void sendLogRq(DynamoSpiDto dynamoSpiDto, HeadersRq headersRq) {
 
-        opensearchLogService.sendSNSOpenSearchLogs(indexTimeLineMapper.mapEnrollmentToTimeLine(enrollmentRq,
-                        headersRq,
-                        TypeServiceConstants.REQUEST),
-                snsSelectorUtil.selectSNS(enrollmentRq.getProduct().getAccount().getBankId()),
-                ActionConstants.ONLINE_ENROLL,
-                TimeStampEnum.FED_ENROLLMENT_REQUEST);
-
+        opensearchLogService.sendSNSOpenSearchLogs(
+                indexTimeLineMapper.mapDynamoToTimeLine(dynamoSpiDto,
+                        headersRq.getRequestId()),
+                snsSelectorUtil.selectSNS(dynamoSpiDto.getAcctInfo().getBankId()),
+                ActionConstants.CANCELLATION,
+                TimeStampEnum.FED_UPDATE_REQUEST);
+                //TimeStampEnum.FED_DELETE_REQUEST);
     }
 
 
@@ -69,14 +69,13 @@ public class TimeLineUtil {
      * @param enrollmentRq modelo que representa el request de la
      *                     petición de creación en línea.
      */
-    public void sendLogRs(EnrollmentRq enrollmentRq, HeadersRq headersRq) {
+    public void sendLogRs(DynamoSpiDto dynamoSpiDto, HeadersRq headersRq) {
 
-        opensearchLogService.sendSNSOpenSearchLogs(indexTimeLineMapper.mapEnrollmentToTimeLine(enrollmentRq,
-                        headersRq,
-                        TypeServiceConstants.RESPONSE),
-                snsSelectorUtil.selectSNS(enrollmentRq.getProduct().getAccount().getBankId()),
-                ActionConstants.ONLINE_ENROLL,
-                TimeStampEnum.FED_ENROLLMENT_RESPONSE);
+        opensearchLogService.sendSNSOpenSearchLogs(indexTimeLineMapper.mapDynamoToTimeLine(dynamoSpiDto, dynamoSpiDto.getAcctInfo().getBankId()),
+                snsSelectorUtil.selectSNS(dynamoSpiDto.getAcctInfo().getBankId()),
+                ActionConstants.ONLINE_CANCELLATION,
+                TimeStampEnum.FED_UPDATE_RESPONSE);
+                //TimeStampEnum.CUST_DELETE_RESPONSE);
 
     }
 
