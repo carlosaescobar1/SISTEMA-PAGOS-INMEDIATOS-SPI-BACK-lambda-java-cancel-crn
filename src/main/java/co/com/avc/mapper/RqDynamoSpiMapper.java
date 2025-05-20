@@ -38,6 +38,7 @@ public class RqDynamoSpiMapper {
         dynamoSpiDto.setVaultNameRec(ConstantsEnum.REDEBAN.getValue());
         dynamoSpiDto.setEffDtModify(Util.createDate());
         log.info("redirectDynamoData: {}", Util.object2StringWithNulls(dynamoSpiDto));
+        //lLEGA
         return dynamoSpiDto;
     }
 

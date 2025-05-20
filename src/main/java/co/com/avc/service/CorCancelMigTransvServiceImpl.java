@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
-import static co.com.avc.constants.ResponseCodeEnum.RED_PERSON_SUCCESS_STATUS_CODE;
+
 import static co.com.avc.constants.ResponseStatusCodeEnum.PERSON_SUCCESS_STATUS_CODE;
 import static co.com.ath.opensearch.logs.constants.ActionConstants.EVENT_BATCH_VAULT_SYNC;
 import static co.com.ath.opensearch.logs.constants.IndexConstants.SONDA_INDEX;

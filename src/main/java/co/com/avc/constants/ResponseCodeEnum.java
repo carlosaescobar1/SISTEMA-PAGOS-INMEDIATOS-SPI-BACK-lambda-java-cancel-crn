@@ -30,7 +30,7 @@ import lombok.Getter;
 public enum ResponseCodeEnum { //Enums de las respuestas respecto a las peticiones
 
     /**
-     * Código de respuesta exitoso para el servicio de creación de personas.
+     * Código de respuesta exitoso para el servicio de creación de Spersonas.
      */
     CRN_PERSON_SUCCESS_STATUS_CODE("Value_key"),
 

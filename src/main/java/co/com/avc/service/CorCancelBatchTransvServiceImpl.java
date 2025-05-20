@@ -134,7 +134,7 @@ public class CorCancelBatchTransvServiceImpl implements ICorCancelBatchTransvSer
                 corDeleteService,
                 updateOpenSearchService
         );
-
+        //--->
         HttpResponseWrapper httpResponseWrapper = corVaultService.vaultService(dynamoSpiDto,
                 paramVaultUpload, vaultServicesTimeOut, null, subject, rqId);
                 /*
@@ -158,12 +158,13 @@ public class CorCancelBatchTransvServiceImpl implements ICorCancelBatchTransvSer
                 if (successResponse != null && successResponse.getValue_key() != null) {
                     if (updateOpenSearchService.searchKey(dynamoSpiDto.getKey().getKeyId()) > 0) {
                         openSearchSynchService.openSearchSyncCancel(dynamoSpiEntity);
-                        log.info("Finalizó borrado en OpenSearch");
+                        log.info("Finalizó borrado en OpenSearch"); //Se registra que se elimino en openseach
                         updateOpenSearchService.processSuccessBatchAction(messageDtoBatch);
                     } else {
                         log.error("No existe el registro en OpenSearch");
                     }
                     if (dynamoRepository.load(dynamoSpiEntity.getId(), dynamoSpiEntity.getSk()) != null) {
+                        //Elimina el registro de la tabla de dynamo
                         dynamoRepository.delete(dynamoSpiEntity);
                     } else {
                         log.error("No existe el registro en Dynamo");

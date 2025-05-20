@@ -73,7 +73,8 @@ public class CorVaultService {
 
             httpResponseWrapper = corDeleteService.deleteKey(dynamoSpiDto.getKey().getKeyId(),
                     headersRq,
-                    paramVaultUpload.getUrlCancelVault(),
+                    //Aqui se usa el endpoint de la cámara Corner
+                    paramVaultUpload.getUrlDeleteAcctVault(),
                     vaultServicesTimeOut.getRedDeleteTimeOut());
             log.info("HttpResponseWrapper: {}", Util.object2String(httpResponseWrapper));
 

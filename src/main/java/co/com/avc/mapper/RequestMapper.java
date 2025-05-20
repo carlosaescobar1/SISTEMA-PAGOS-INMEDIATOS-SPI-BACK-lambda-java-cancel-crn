@@ -85,7 +85,7 @@ public class RequestMapper {
         } else {
             dynamoSpiDto = messageDto.getMessageDtoDynamo().getDynamoSpiDto();
         }
-        dynamoSpiDto.setVaultNameRec(ConstantsEnum.REDEBAN.getValue());
+        dynamoSpiDto.setVaultNameRec(ConstantsEnum.CORNER.getValue());
         dynamoSpiDto.setEffDtCreate(dateOperation);
 
         log.info("redirectDynamoData: " + Util.object2StringWithNulls(dynamoSpiDto));
