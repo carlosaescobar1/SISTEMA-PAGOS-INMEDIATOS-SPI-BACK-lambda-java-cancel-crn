@@ -1,8 +1,8 @@
 package co.com.avc.mapper;
 import co.com.ath.commons.util.Util;
-import co.com.ath.cornerconn.models.Key;
-import co.com.ath.cornerconn.models.PaymentMethod;
-import co.com.ath.cornerconn.models.Person;
+import co.com.avc.cornerconn.models.Key;
+import co.com.avc.cornerconn.models.PaymentMethod;
+import co.com.avc.cornerconn.models.Person;
 import co.com.avc.constants.ConstantsEnum;
 import co.com.avc.models.MessageDtoBatch;
 import co.com.avc.models.MessageDtoDynamo;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * Mapper para convertir diferentes tipos de mensajes de entrada en objetos {@link DynamoSpiDto} utilizados
  * para interactuar con DynamoDB en el proceso de cancelación de llaves bancarias en el sistema de A Toda Hora (ATH).
  *
- * @author [Tu Nombre]
+ *
  * @version 1.0
  * @since 2024
  */

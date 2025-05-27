@@ -9,7 +9,7 @@ import co.com.avc.models.MessageDtoBatch;
 import co.com.avc.models.MessageDtoKeysCancel;
 import co.com.avc.models.dynamoAth.DynamoSpiDto;
 import co.com.ath.opensearch.logs.entity.index_batch.OSIndexBatch;
-import co.com.ath.cornerconn.models.CornersHeadersRq;
+import co.com.avc.cornerconn.models.CornersHeadersRq;
 import lombok.extern.slf4j.Slf4j;
 
 

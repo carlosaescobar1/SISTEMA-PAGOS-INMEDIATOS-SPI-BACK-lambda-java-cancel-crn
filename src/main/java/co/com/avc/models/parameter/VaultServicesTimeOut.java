@@ -31,5 +31,5 @@ import lombok.Setter;
 @SerdeImport(VaultServicesTimeOut.class)
 public class VaultServicesTimeOut {
 
-    private int redDeleteTimeOut;
+    private int crnDeleteTimeOut;
 }

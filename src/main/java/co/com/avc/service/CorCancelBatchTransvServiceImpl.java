@@ -1,10 +1,10 @@
 package co.com.avc.service;
 
 import co.com.ath.commons.util.Util;
-import co.com.ath.cornerconn.models.CornersHeadersRq;
-import co.com.ath.cornerconn.models.MsgErrors;
-import co.com.ath.cornerconn.service.cancellation.CornerCancellationKeyServiceImpl;
-import co.com.ath.cornerconn.service.cancellation.ICornerCancellationKeyService;
+import co.com.avc.cornerconn.models.CornersHeadersRq;
+import co.com.avc.cornerconn.models.MsgErrors;
+import co.com.avc.cornerconn.service.cancellation.CornerCancellationKeyServiceImpl;
+import co.com.avc.cornerconn.service.cancellation.ICornerCancellationKeyService;
 import co.com.avc.entity.Ath.DynamoSpiEntity;
 import co.com.avc.mapper.*;
 import co.com.avc.models.MessageDtoBatch;
@@ -14,7 +14,7 @@ import co.com.avc.models.parameter.ParamFlowConfig;
 import co.com.avc.models.parameter.ParamVaultUpload;
 import co.com.avc.models.parameter.ParameterStoreDto;
 import co.com.avc.models.parameter.VaultServicesTimeOut;
-import co.com.ath.cornerconn.models.HttpResponseWrapper;
+import co.com.avc.cornerconn.models.HttpResponseWrapper;
 //import co.com.ath.cornerconn.models.MsgInformationResponse;
 import co.com.avc.repository.DynamoRepository;
 import co.com.avc.service.interfaces.IOpenSearchSynchService;
@@ -78,6 +78,11 @@ public class CorCancelBatchTransvServiceImpl implements ICorCancelBatchTransvSer
     private final ParamFlowConfig paramFlowConfig;
 
     /**
+     * Clase que mapea los headers.
+     */
+    private final HeadersMapper headersMapper;
+
+    /**
      * Objeto con la información de la camara de corner
      */
     private final VaultSelectorUtil vaultSelectorUtil;
@@ -125,38 +130,52 @@ public class CorCancelBatchTransvServiceImpl implements ICorCancelBatchTransvSer
         /**
          * Null  por que no los pide el contrato
          */
-        CornersHeadersRq headersRq = null;
+        CornersHeadersRq headersRq =  headersMapper.headersMapper();
 
+        log.info("Ingresa a corCancelBatchService");
 
-
-
+        log.info("Inicializa a CorVaultService");
+        log.info("El sqs mapeado en dynamoSpiDto es: {}", Util.object2String(dynamoSpiDto));
+        //Consume la camara
         CorVaultService corVaultService = new CorVaultService(
                 corDeleteService,
                 updateOpenSearchService
         );
+
+        long startTime = System.currentTimeMillis();
+        log.info("Inicializa a HttpResponseWrapper");
         //--->
         HttpResponseWrapper httpResponseWrapper = corVaultService.vaultService(dynamoSpiDto,
-                paramVaultUpload, vaultServicesTimeOut, null, subject, rqId);
+                paramVaultUpload, vaultServicesTimeOut, headersRq, subject, rqId);
+
                 /*
         MsgInformationResponseSuccess msgInformation = (MsgInformationResponseSuccess)
                 Util.string2object(httpResponseWrapper.getResponseBody(), MsgInformationResponseSuccess.class);
                 */
-
+        log.info("ingresa a logica corCancelBatchService");
+        log.info("Tiempo después de logica vaultService: {} ms", System.currentTimeMillis() - startTime);
         DynamoSpiEntity dynamoSpiEntity = IDynamoMapper.INSTANCE.dynamoDtoToDynamoEntity(dynamoSpiDto);
+        log.info("Pasa la instancia del mapper");
         //Verifica que no llegue nulo el messageDtoBatch y que contenga el osIndexBatch
         if (messageDtoBatch != null && messageDtoBatch.getOsIndexBatch() != null) {
+            log.info("Pasa primer condicional");
             // Deserializar la respuesta según el caso
             Object responseObject;
             if (httpResponseWrapper.getStatusCode() == PERSON_SUCCESS_STATUS_CODE.getValue()) {
+                log.info("pasa segundo condicional");
                 responseObject = Util.string2object(httpResponseWrapper.getResponseBody(), MsgInformationResponseSuccess.class);
             } else {
+                log.info("Else segundo condicional");
                 responseObject = Util.string2object(httpResponseWrapper.getResponseBody(), MsgErrors.class);
             }
-
+            log.info("Entra a condicionales finales");
             if (httpResponseWrapper.getStatusCode() == PERSON_SUCCESS_STATUS_CODE.getValue()) {
                 MsgInformationResponseSuccess successResponse = (MsgInformationResponseSuccess) responseObject;
                 if (successResponse != null && successResponse.getValue_key() != null) {
-                    if (updateOpenSearchService.searchKey(dynamoSpiDto.getKey().getKeyId()) > 0) {
+                    log.info("id que se va a buscar en openasearch: {}", dynamoSpiDto.getKey().getKeyId());
+                    log.info("Tipo de la llave que se va a buscar en opensearch: {}", dynamoSpiDto.getKey().getKeyType());
+                    if (updateOpenSearchService.searchKey(dynamoSpiDto.getKey().getKeyId(),
+                            dynamoSpiDto.getKey().getKeyType()) != 0) {
                         openSearchSynchService.openSearchSyncCancel(dynamoSpiEntity);
                         log.info("Finalizó borrado en OpenSearch"); //Se registra que se elimino en openseach
                         updateOpenSearchService.processSuccessBatchAction(messageDtoBatch);

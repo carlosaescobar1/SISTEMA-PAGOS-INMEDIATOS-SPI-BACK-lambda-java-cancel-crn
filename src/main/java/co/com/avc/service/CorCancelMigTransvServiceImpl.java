@@ -1,6 +1,6 @@
 package co.com.avc.service;
 import co.com.ath.commons.util.Util;
-import co.com.ath.cornerconn.models.MsgErrors;
+import co.com.avc.cornerconn.models.MsgErrors;
 import co.com.avc.constants.BatchEnum;
 import co.com.avc.entity.Ath.DynamoSpiEntity;
 import co.com.avc.mapper.*;
@@ -10,10 +10,10 @@ import co.com.avc.models.parameter.ParamFlowConfig;
 import co.com.avc.models.parameter.ParamVaultUpload;
 import co.com.avc.models.parameter.VaultServicesTimeOut;
 import co.com.ath.opensearch.logs.entity.index_batch.OSIndexBatch;
-import co.com.ath.cornerconn.models.HttpResponseWrapper;
-import co.com.ath.cornerconn.models.MsgInformationResponse;
-import co.com.ath.cornerconn.service.cancellation.ICornerCancellationKeyService;
-import co.com.ath.cornerconn.service.cancellation.CornerCancellationKeyServiceImpl;
+import co.com.avc.cornerconn.models.HttpResponseWrapper;
+import co.com.avc.cornerconn.models.MsgInformationResponse;
+import co.com.avc.cornerconn.service.cancellation.ICornerCancellationKeyService;
+import co.com.avc.cornerconn.service.cancellation.CornerCancellationKeyServiceImpl;
 import co.com.avc.repository.DynamoRepository;
 import co.com.avc.service.interfaces.IOpenSearchSynchService;
 import co.com.avc.service.interfaces.ICorCancelMigTransvService;
@@ -141,7 +141,8 @@ public class CorCancelMigTransvServiceImpl implements ICorCancelMigTransvService
             }
 
             // Verificar y sincronizar cancelación en OpenSearch
-            if (updateOpenSearchService.searchKey(dynamoSpiDto.getKey().getKeyId()) > 0) {
+            if (updateOpenSearchService.searchKey(dynamoSpiDto.getKey().getKeyId(),
+                    dynamoSpiDto.getKey().getKeyType()) != 0) {
                 openSearchSynchService.openSearchSyncCancel(dynamoSpiEntity);
             } else {
                 log.error("No existe el registro en OpenSearch");

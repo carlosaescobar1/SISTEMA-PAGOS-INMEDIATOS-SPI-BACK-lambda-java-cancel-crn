@@ -4,7 +4,7 @@ import co.com.ath.redebanconn.model.HeadersRq;
 import co.com.avc.models.MessageDtoBatch;
 import co.com.avc.models.dynamoAth.DynamoSpiDto;
 import co.com.ath.opensearch.logs.constants.IndexConstants;
-import co.com.ath.cornerconn.models.CornersHeadersRq;
+import co.com.avc.cornerconn.models.CornersHeadersRq;
 import org.opensearch.client.opensearch.core.SearchTemplateResponse;
 import org.opensearch.client.opensearch.core.search.Hit;
 
@@ -41,13 +41,13 @@ public interface IUpdateOpenSearchService {
     void updateElement(Map<String, Object> jsonMap, String id);
 
     //
-    long searchKey(String keyId);
+    long searchKey(String keyId, String keyType);
     //
     long searchBatch(DynamoSpiDto dynamoSpiDto);
 
     SearchTemplateResponse<HashMap> searchBatch(String keyId);
 
-    SearchTemplateResponse<HashMap> searchTemplateKey(String keyId);
+    SearchTemplateResponse<HashMap> searchTemplateKey(String keyId, String keyType);
     void keyProcessor(List<Hit<HashMap>> hits);
 
 

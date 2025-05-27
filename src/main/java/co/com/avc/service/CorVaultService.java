@@ -1,14 +1,14 @@
 package co.com.avc.service;
 import co.com.ath.commons.util.ATHException;
 import co.com.ath.commons.util.Util;
-import co.com.ath.cornerconn.models.CornersHeadersRq;
-import co.com.ath.cornerconn.service.cancellation.ICornerCancellationKeyService;
+import co.com.avc.cornerconn.models.CornersHeadersRq;
+import co.com.avc.cornerconn.service.cancellation.ICornerCancellationKeyService;
 import co.com.avc.constants.ConstantsEnum;
 import co.com.avc.constants.ResponseServiceEnum;
 import co.com.avc.models.dynamoAth.DynamoSpiDto;
 import co.com.avc.models.parameter.ParamVaultUpload;
 import co.com.avc.models.parameter.VaultServicesTimeOut;
-import co.com.ath.cornerconn.models.HttpResponseWrapper;
+import co.com.avc.cornerconn.models.HttpResponseWrapper;
 import co.com.avc.service.interfaces.IUpdateOpenSearchService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,22 +67,37 @@ public class CorVaultService {
     public HttpResponseWrapper vaultService(DynamoSpiDto dynamoSpiDto, ParamVaultUpload paramVaultUpload,
                                             VaultServicesTimeOut vaultServicesTimeOut, CornersHeadersRq headersRq,
                                              String fileName, String rqId) {
-
+        log.info("Ingresa a vaultService:");
         HttpResponseWrapper httpResponseWrapper = null;
-        try {
+        log.info("El id mapeado en vaultService es: {}", Util.object2String(dynamoSpiDto.getKey().getKeyId()));
+        log.info("La url es: {}", Util.object2String(paramVaultUpload.getUrlDeleteAcctVault()));
+        log.info("El timeout es: {}", Util.object2String(vaultServicesTimeOut.getCrnDeleteTimeOut()));
 
+        try {
+            log.info("Ingresa al Try de  vaultService :c ");
+            //Aqui se usa el endpoint de la cámara Corner
             httpResponseWrapper = corDeleteService.deleteKey(dynamoSpiDto.getKey().getKeyId(),
                     headersRq,
-                    //Aqui se usa el endpoint de la cámara Corner
                     paramVaultUpload.getUrlDeleteAcctVault(),
-                    vaultServicesTimeOut.getRedDeleteTimeOut());
-            log.info("HttpResponseWrapper: {}", Util.object2String(httpResponseWrapper));
+                    vaultServicesTimeOut.getCrnDeleteTimeOut());
+            log.info("HttpResponseWrapper: {}", Util.object2StringWithNulls(httpResponseWrapper));
+            if (httpResponseWrapper.getStatusCode() == 200) {
+                log.info("DELETE exitoso, si se devolvió codigo 200");
+            } else if (httpResponseWrapper.getStatusCode() >= 400) {
+                log.error("Error en el endpoint DELETE: {}", httpResponseWrapper);
 
+            }
+            // Guardar en index_rejected para errores específicos, como 404
+            if (httpResponseWrapper.getStatusCode() == 404) {
+                log.info("Inicia guardado en index_rejected por llave inexistente");
+                updateOpenSearchService.saveIndexRejected(dynamoSpiDto, fileName, ConstantsEnum.ERROR_ATH_SERVICE.getValue(),
+                        "Llave no encontrada: " + dynamoSpiDto.getKey().getKeyId(), rqId);
+            }
 
         } catch (IOException | URISyntaxException | InterruptedException conExp) {
             log.info("Inicia guardado en index_rejected");
 
-            //Se queman debido a que no se tiene para Corner
+            //Error en el proceso de cración
 
             updateOpenSearchService.saveIndexRejected(dynamoSpiDto, fileName, ConstantsEnum.ERROR_ATH_SERVICE.getValue(),
                     conExp.getMessage(),  rqId);

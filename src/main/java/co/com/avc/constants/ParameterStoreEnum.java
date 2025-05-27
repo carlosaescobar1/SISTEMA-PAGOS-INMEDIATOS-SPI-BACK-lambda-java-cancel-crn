@@ -47,7 +47,7 @@ public enum ParameterStoreEnum {
 
     /**
      * Ruta del parámetro que almacena los tiempos de espera máximos para el consumo del servicio
-     * de creación redeban.
+     * de creación redeban-Corner.
      */
     PARAM_VAULT_SERVICE_TIMEOUT("/SPI/AWUE1ATHSPI-LAMBDA-TRANSV/vaultServicesTimeOut"),
 

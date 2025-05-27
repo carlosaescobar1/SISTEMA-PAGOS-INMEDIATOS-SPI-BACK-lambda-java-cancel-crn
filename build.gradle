@@ -13,14 +13,22 @@ repositories {
     mavenLocal()
 }
 
+shadowJar {
+    archiveClassifier.set('all')
+    mergeServiceFiles()
+    from(sourceSets.main.output) // Incluye clases compiladas
+    from(file('build/generated/sources/annotationProcessor/java/main')) // Incluye clases generadas
+}
 dependencies {
     annotationProcessor("io.micronaut:micronaut-http-validation")
     annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
     implementation("io.micronaut:micronaut-http-client-jdk")
     implementation("io.micronaut.aws:micronaut-aws-lambda-events-serde")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
-    runtimeOnly("ch.qos.logback:logback-classic")
-
+    runtimeOnly("ch.qos.logback:logback-classic")//Nuevo
+    implementation 'ch.qos.logback:logback-core:1.5.13'//Nuevo
+    implementation 'ch.qos.logback:logback-classic:1.5.13'//Nuevo
+    implementation 'io.micronaut:micronaut-inject'//Nuevo
     implementation('io.jsonwebtoken:jjwt:0.2')
     implementation("io.micronaut.aws:micronaut-function-aws")
     implementation("io.micronaut.aws:micronaut-aws-sdk-v2")
@@ -39,9 +47,6 @@ dependencies {
     implementation 'com.amazonaws:aws-lambda-java-events:3.11.0'
     implementation("com.amazonaws:aws-java-sdk-dynamodb:1.12.389")
 
-    //MAP
-    implementation 'org.mapstruct:mapstruct:1.6.0'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.0'
 
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
@@ -65,7 +70,7 @@ dependencies {
     implementation group: 'co.com.ath', name: 'spbvi-conn-redeban', version: '2.0-SNAPSHOT'
     implementation group: 'co.com.ath', name: 'spbvi-opensearch-logs-lib', version: '2.0-SNAPSHOT'
     implementation group: 'co.com.ath', name: 'spbvi-opensearch-sync-lib', version: '2.0-SNAPSHOT'
-    implementation group: 'co.com.ath', name: 'spbvi-conn-corner', version: '2.0-SNAPSHOT'
+    implementation group: 'co.com.avc', name: 'spbvi-conn-corner', version: '1.0-SNAPSHOT'
 
     implementation 'io.micronaut.validation:micronaut-validation'
     annotationProcessor 'io.micronaut.validation:micronaut-validation-processor'
@@ -93,7 +98,7 @@ micronaut {
     testRuntime("junit5")
     processing {
         incremental(true)
-        annotations("co.com.ath.*")
+        annotations("co.com.avc.*", "co.com.ath.*")
     }
     aot {
         // Please review carefully the optimizations enabled below
@@ -105,7 +110,7 @@ micronaut {
         optimizeClassLoading = true
         deduceEnvironment = true
         optimizeNetty = true
-        replaceLogbackXml = true
+        replaceLogbackXml = false
     }
 }
 

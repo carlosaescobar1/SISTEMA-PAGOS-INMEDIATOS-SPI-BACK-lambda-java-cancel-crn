@@ -101,19 +101,16 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
         }
     }
 
-    public long searchKey(String keyId) {
-        if (keyId == null || keyId.isEmpty()) {
-            log.error("El keyId es nulo o vacío, no se puede buscar en OpenSearch");
-            throw new ATHException("INVALID_KEY_ID", "El keyId no puede ser nulo o vacío", 400);
-        }
+    public long searchKey(String keyId, String keyType) {
+
 
         SearchTemplateResponse<HashMap> searchResponse;
         long hitsSize;
 
         Map<String, JsonData> params = new HashMap<>();
 
-
-
+        params.put(ConstantsEnum.OP_PARAMETER_KEY_TYPE.getValue(),
+                JsonData.of(keyType));
 
         params.put(ConstantsEnum.OP_PARAMETER_KEY_VALUE.getValue(),
                 JsonData.of(keyId));
@@ -128,14 +125,9 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
 
             hitsSize = searchResponse.hits().total().value();
 
-        } catch (OpenSearchException e) {
-            log.error("Error al buscar en OpenSearch: Índice o template no encontrado: {}", e.getMessage());
-            throw new ATHException("OS_INDEX_NOT_FOUND", "Índice o template no encontrado en OpenSearch", 500);
-        } catch (IOException e) {
-            log.error("Error de conexión con OpenSearch: {}", e.getMessage());
-            throw new ATHException("OS_CONNECTION_ERROR", "Fallo de conexión con OpenSearch", 503);
         } catch (Exception e) {
-            log.error("Error inesperado al buscar en OpenSearch: {}", e.getMessage());
+            e.printStackTrace(new PrintWriter(errors));
+            log.error("{}{}", ConstantsEnum.ERROR_CONNECTION.getValue(), errors);
             throw new ATHException(MessagesEnum.DEFAULT_ERROR_RESPONSE.getCode(),
                     MessagesEnum.DEFAULT_ERROR_RESPONSE.getMessage(),
                     MessagesEnum.DEFAULT_ERROR_RESPONSE.getHttpCode());
@@ -316,8 +308,7 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
 
 
     @Override
-    public SearchTemplateResponse<HashMap> searchTemplateKey(String keyId) { //Aqui se consulta la llave desde este servicio despues de
-        //Sincronizar con OpenSearch
+    public SearchTemplateResponse<HashMap> searchTemplateKey(String keyId, String keyType) {
 
 
         SearchTemplateResponse<HashMap> searchResponse;
@@ -326,7 +317,8 @@ public class UpdateOpenSearchServiceImpl implements IUpdateOpenSearchService {
 
         Map<String, JsonData> params = new HashMap<>();
 
-
+        params.put(ConstantsEnum.OP_PARAMETER_KEY_TYPE.getValue(),
+                JsonData.of(keyType));
 
         params.put(ConstantsEnum.OP_PARAMETER_KEY_VALUE.getValue(),
                 JsonData.of(keyId));

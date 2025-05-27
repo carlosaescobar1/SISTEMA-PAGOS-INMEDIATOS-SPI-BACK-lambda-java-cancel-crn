@@ -91,10 +91,7 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
      */
     private String fileName;
 
-    /**
-     * Mapper del request principal de la cámara
-     */
-    private final RequestMapper requestMapper = new RequestMapper();
+
 
     /**
      * Servicio para obtener los valores del los parámetros
@@ -192,7 +189,7 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
      */
     private final VaultSelectorUtil vaultSelectorUtil = new VaultSelectorUtil(parameterStoreDto.getParamActiveVault());
     private final ParamVaultUpload paramVaultUpload = vaultSelectorUtil.selectorVault();
-
+    private final HeadersMapper headersMapper = new HeadersMapper();
     private final ICorCancelMigTransvService cancelTransvService =
             new CorCancelMigTransvServiceImpl(
                     timeLineUtil, indexBatchMapper, parameterStoreDto.getParamFlowConfig(), vaultSelectorUtil,
@@ -201,7 +198,7 @@ public class LambdaHandler extends MicronautRequestHandler<SQSEvent, Void> {
 
     private final ICorCancelBatchTransvService cancelBatchTransvService = new CorCancelBatchTransvServiceImpl(
              timeLineUtil, indexBatchMapper,
-            parameterStoreDto.getParamFlowConfig(), vaultSelectorUtil,
+            parameterStoreDto.getParamFlowConfig(),headersMapper, vaultSelectorUtil,
             parameterStoreDto.getVaultServicesTimeOut(), dynamoRepository, updateOpenSearchService,
             openSearchSynchService, paramVaultUpload);
 

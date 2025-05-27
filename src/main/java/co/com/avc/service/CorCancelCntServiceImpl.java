@@ -1,12 +1,11 @@
 package co.com.avc.service;
 import co.com.ath.commons.util.Util;
-import co.com.ath.cornerconn.models.DetailErrors;
-import co.com.ath.cornerconn.models.MsgErrors;
+import co.com.avc.cornerconn.models.DetailErrors;
+import co.com.avc.cornerconn.models.MsgErrors;
 import co.com.avc.constants.BatchEnum;
 import co.com.avc.entity.Ath.DynamoSpiEntity;
 import co.com.avc.mapper.IDynamoMapper;
 import co.com.avc.mapper.IndexBatchMapper;
-import co.com.avc.mapper.RqDeleteMapper;
 import co.com.avc.models.MessageDtoKeysCancel;
 import co.com.avc.models.MsgInformationResponseSuccess;
 import co.com.avc.models.dynamoAth.DynamoSpiDto;
@@ -16,10 +15,10 @@ import co.com.avc.models.parameter.VaultServicesTimeOut;
 import co.com.ath.opensearch.logs.entity.index_batch.OSIndexBatch;
 import co.com.ath.opensearch.logs.entity.index_key.OSIndexKey;
 import co.com.ath.redebanconn.model.HeadersRq;
-import co.com.ath.cornerconn.models.HttpResponseWrapper;
-import co.com.ath.cornerconn.models.MsgInformationResponse;
-import co.com.ath.cornerconn.service.cancellation.ICornerCancellationKeyService;
-import co.com.ath.cornerconn.service.cancellation.CornerCancellationKeyServiceImpl;
+import co.com.avc.cornerconn.models.HttpResponseWrapper;
+import co.com.avc.cornerconn.models.MsgInformationResponse;
+import co.com.avc.cornerconn.service.cancellation.ICornerCancellationKeyService;
+import co.com.avc.cornerconn.service.cancellation.CornerCancellationKeyServiceImpl;
 import co.com.avc.repository.DynamoRepository;
 import co.com.avc.service.interfaces.IOpenSearchSynchService;
 import co.com.avc.service.interfaces.IUpdateOpenSearchService;
@@ -164,7 +163,7 @@ public class CorCancelCntServiceImpl {
                 } else {
                     log.info("No existe registro en Dynamo de la llave");
                 }
-                cancelOpenSearch(messageDtoKeysCancel.getKeyId());
+               // cancelOpenSearch(messageDtoKeysCancel.getKeyId());
                 updateBatch(messageDtoKeysCancel, rqId);
             } else {
                 log.error("Respuesta exitosa pero value_key es nulo");
@@ -225,10 +224,10 @@ public class CorCancelCntServiceImpl {
         }
     }
 
-    private void cancelOpenSearch(String keyId) {
+    private void cancelOpenSearch(String keyId, String keyType) {
 
         SearchTemplateResponse<HashMap> searchresponse = updateOpenSearchService
-                .searchTemplateKey(keyId);
+                .searchTemplateKey(keyId, keyType);
 
         List<Hit<HashMap>> hits = searchresponse.hits().hits();
 
